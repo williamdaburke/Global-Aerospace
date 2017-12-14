@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="googlebot" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+   <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/css/bootstrap.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.css" rel="stylesheet">   
+  
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.js"></script> 
+    
+	<script type="text/javascript" src="https://rawgithub.com/yesmeck/jquery-jsonview/master/dist/jquery.jsonview.js"></script>
+ 
+  
+  
+  
+
+  
+ 
+
+
+  
+
+   <style type="text/css">
+    .sidebar {
+    background-color: lightgrey;
+    box-shadow: -5px 0 10px #aaaaaa;
+}
+.centerImage{
+display: block;
+    margin: 0 auto;
+}
+.toolbar {
+    padding: 2em 0 2em 0;
+    border-bottom: 1px solid grey;
+}
+p {
+    margin: 1em 0.5em;
+}
+div.hidden_div {     /* this will hide div with class div_class_name */
+  display:none;
+}
+#import {
+  margin:10px 0;
+}
+#result {
+  display:block;
+  width:700px;
+  height:200px;
+}
+
+  </style>
+
+  <title></title>
+
+  
+    
+
+
+
+
+<script type='text/javascript'>//<![CDATA[
+var bigRateObj
+var currentRateObj
+var fixerURLBase = 'https://api.fixer.io/'
+var yahooPreviewURLBase ="https://finance.yahoo.com/quote/"
+var xePreviewBase = "https://www.xe.com/currencycharts/?from="
+var URLBaseParent
+var dateToday
+var selectedDate
+var globalHTMLdocStringified
+  var currCurrFrom
+	var currCurrTo
+
+function previewYahooFinance() {
+	var targetURL = yahooPreviewURLBase + currCurrFrom+currCurrTo + "%3DX/chart?p="+currCurrFrom+currCurrTo+"%3DX"
+  $('#iframe_div').empty();
+  $('<iframe>') // Creates the element
+    .attr('src', targetURL) 
+    .attr('height', 700)
+    .attr('width', 700)
+    .attr('id', 'my_page')
+    .appendTo('#iframe_div');
+};
+function previewXeFinance() {
+  //var currCurrFrom = document.getElementById("selectCurrencyFrom").value;
+	//var currCurrTo = document.getElementById("selectCurrencyTo").value
+    $('<iframe>') // Creates the element
+    .attr('src', xePreviewBase + currCurrFrom+"&to="+ currCurrTo+"&view=1D") 
+    .attr('height', 700)
+    .attr('width', 700)
+    .attr('id', 'my_page')
+    .appendTo('#iframe_div');
+};
+
+function populateCurrencies() {
+  $.ajax({
+    url:'https://api.fixer.io/latest',
+   crossDomain: true,
+    dataType:"json",
+	success:function(data){ 
+		console.log(bigRateObj)
+		console.log(data)
+		Object.keys(data.rates).forEach(function(key) {
+			addCurrToDropDown(key)
+			});
+		//popRegs(newhtmldoc, regionStr);
+		currentRateObj = data;
+	 },
+    error:function(jqXHR, textStatus, errorThrown){ alert(textStatus); }
+})
+};
+
+/*
+function populateCurrenciesFromFile(){
+	var files = document.getElementById('selectFiles').files;
+  if (files.length <= 0) {return false;}
+  var fr = new FileReader();
+  fr.onload = function(e) { 
+  console.log(e);
+	var result = JSON.parse(e.target.result);
+	
+	Object.keys(result.rates).forEach(function(key) {
+		currentRateObj.rates[key] = result.rates[key]
+		console.log(key, result.rates[key]);
+		$('<p>') // Creates the element
+				.html(key+' is an active currency')
+				.appendTo('#div1b');
+		});
+	var formatted = JSON.stringify(result, null, 2);
+		document.getElementById('result').value = formatted;
+  }
+   fr.readAsText(files.item(0));
+}*/
+
+function addCurrToDropDown(currency){
+	var selectPopulate = document.getElementById("selectCurrencyFrom");
+	var selectPreview = document.getElementById("selectCurrencyTo");
+	var el = document.createElement("option");
+	el.textContent = currency;
+	el.value = currency;     			//linkExt.replace(/[-\/\\^$*+'?. ()|[\]{}]/g, '');
+	selectPopulate.appendChild(el);
+	var el2 = el.cloneNode(true);
+	selectPreview.appendChild(el2);
+}
+
+jQuery(document).ready(function($) {
+	$('#itObjTree').hide(); 
+	var today = new Date();
+	dateToday = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+	$('#datepicker').datepicker({maxDate: dateToday, yearRange: "1999:2020",dateFormat : "yy-mm-dd",}).datepicker('setDate', today);
+	selectedDate = document.getElementById("datepicker").value;
+	currCurrFrom = document.getElementById("selectCurrencyFrom").value;
+	currCurrTo = document.getElementById("selectCurrencyTo").value
+	
+	$.ajaxSetup({ cache: false });
+	bigRateObj = {};
+	bigRateObj.historicRates = {}
+	currentRateObj = {};
+	currentRateObj.rates = {};
+	populateCurrencies();
+	//populateCurrenciesFromFile()
+		
+  $('#myButton4').click(function() {
+    $('#div1').toggle()
+  });
+  $("#myButtonShowChart").click(function() {
+    if(currCurrFrom.length == 3 && currCurrTo.length == 3){
+	$('#iframe_div').empty();
+	previewXeFinance()
+	$('#iframe_div').children('iframe').show();
+	}
+	else{alert("Please select two currencies")}
+  });
+   $("#myButtonHideChart").click(function() {
+   	$('#iframe_div').children('iframe').hide();
+  });
+  
+  $('#myButton5').click(function() {
+    $('#optionsFrame').toggle()
+  })
+  
+  $("#submitAmountToConvertButton").click(function() {
+    $('#iframe_div').children('iframe').toggle();
+  });
+  $("#importJSONbutt").click(function() {
+		var files = document.getElementById('selectFiles').files;
+	  if (files.length <= 0) {return false;}
+	  var fr = new FileReader();
+	  fr.onload = function(e) { 
+	  console.log(e);
+		var result = JSON.parse(e.target.result);
+		
+		Object.keys(result.rates).forEach(function(key) {
+			currentRateObj.rates[key] = result.rates[key]
+			addCurrToDropDown(key)
+			});
+		var formatted = JSON.stringify(result, null, 2);
+			$('#resultText').show()
+			document.getElementById('resultText').value = formatted;
+	  }
+	   fr.readAsText(files.item(0));
+	});
+ });
+ function changeSelectedDate(){
+  selectedDate = document.getElementById("datepicker").value
+ addConversionToBigObj()
+}
+
+  function updateClickData(value){
+  	if(value == "selectShowJSON"){$('#itObjTree').hide()}
+  	else {if(value == "selectedTodayRate")
+  	{$('#jsontree').JSONView(currentRateObj); 
+  	$('#jsonTreeDesciption').html("Today's Rate JSON Object")}
+  	else {$('#jsontree').JSONView(bigRateObj);
+  	$('#jsonTreeDesciption').html("Collected Rates JSON Object")}
+  	$('#itObjTree').show()}
+  };
+  
+  function downloadObject(value){
+  	if(value == "CollectedRates"){obj = bigRateObj, value = "Collected Rates"} else {obj = currentRateObj; value = "Current Rate"}
+  	if(obj){
+  	var filedata = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(obj));
+      $('<a href="data:' + filedata + '" download="' + value + '.json">   download ' + value + ' JSON   </a>').appendTo('#div1');
+  	JSONToCSVConvertor(obj,value,true)
+  	}
+	
+    };
+
+function convertOld2NewCurrency(currencyFromAmt){
+	currCurrFrom = document.getElementById("selectCurrencyFrom").value;
+	currCurrTo = document.getElementById("selectCurrencyTo").value
+	addConversionToBigObj()
+	var rateToUse = bigRateObj.historicRates[selectedDate][currCurrFrom][currCurrTo]
+	var conversionResult = Number(Math.round(currencyFromAmt*1*rateToUse+'e2')+'e-2').toFixed(2);
+
+	if(isNaN(conversionResult)){ alert("Please Select two currencies")}
+	else{
+	document.getElementById("divConversionResult").innerText = "Conversion Rate is:    "+rateToUse;
+	document.getElementById("currencyToTextInput").value = conversionResult;
+	}
+	//console.log(document.getElementById("datepicker").value)
+}
+function changeConversionRateDisplay(){
+	currCurrFrom = document.getElementById("selectCurrencyFrom").value;
+	currCurrTo = document.getElementById("selectCurrencyTo").value
+	var rateToUse = bigRateObj.historicRates[selectedDate][currCurrFrom][currCurrTo]
+	document.getElementById("divConversionResult").innerText = "Conversion Rate is:    "+rateToUse;
+}
+
+function addConversionToBigObj(){
+	currCurrFrom = document.getElementById("selectCurrencyFrom").value;
+	currCurrTo = document.getElementById("selectCurrencyTo").value
+	if(bigRateObj.historicRates[selectedDate]){
+		if(bigRateObj.historicRates[selectedDate][currCurrFrom]){
+			console.log("rate already loaded");
+		}
+		else{
+			$.getJSON( fixerURLBase + "/"+selectedDate+ "?base=" + currCurrFrom, function( data ) {
+			 //console.log(data.rates[currCurrTo])
+			 bigRateObj.historicRates[selectedDate][currCurrFrom] = data.rates
+				if($('#itObjTree').is(":visible")){
+				$('#jsontree').JSONView(bigRateObj)
+			}
+			 changeConversionRateDisplay()
+			})
+			}
+			}
+	else{
+	bigRateObj.historicRates[selectedDate] = {};
+	$.getJSON( fixerURLBase + "/"+selectedDate+ "?base=" + currCurrFrom, function( data ) {
+			 //console.log(data.rates[currCurrTo])
+			 bigRateObj.historicRates[selectedDate][currCurrFrom] = data.rates
+				if($('#itObjTree').is(":visible")){
+				$('#jsontree').JSONView(bigRateObj)
+			}
+			 changeConversionRateDisplay()
+			})
+			}
+			
+}
+
+//]]> 
+
+</script>
+
+  
+</head>
+
+<body>
+  
+ 
+
+<br>
+<img src="http://www.global-aero.com/wp-content/themes/global/style/img/logo.png"  class="centerImage"/>
+		<br>
+<div class="container text-center">
+     <strong>Select Date:</strong> <input type="text" onchange="changeSelectedDate()" id="datepicker" class="input-append date" data-date-format="dd-mm-yyyy">
+</div>
+<br>
+ <div id='divConversionResult'></div>	
+ <br>
+   <p>
+    <select id="selectCurrencyFrom" onchange="addConversionToBigObj()">
+    <option>Select Start Currency</option>
+</select><input id="currencyFromTextInput" type="text" name="currencyFrom" value="100">
+</p>
+   <br>
+   <select id="selectCurrencyTo" onchange="changeConversionRateDisplay()">
+    <option>Select Result Currency</option>
+</select><input id="currencyToTextInput"  type="text" name="currencyTo" value=""><br>
+  <br>
+  <input id="submitAmountToConvertButton" type="submit" value="Submit" onclick="convertOld2NewCurrency(currencyFromTextInput.value)">
+  
+   <br>
+   
+	<br>
+ 
+  
+  <div id='div2'></div>
+  <select id="selectJSONTree" onchange="updateClickData(this.value)">
+    <option value=selectShowJSON>Show Rates</option>
+	<option value=selectedTodayRate>Yesterday Close Euro Exchange</option>
+	<option value=selectedBigRate>Collected Rates</option>
+</select>
+ <br>
+<div id=itObjTree class="sidebar"  class="hidden_div">
+<div class="toolbar" hidden>
+    <p id=jsonTreeDesciption>current JSON Object</p>
+</div>
+<div id="jsontree"></div>
+</div>
+<br>
+<br>
+<button id="myButtonShowChart">Show Chart</button>
+  <button id="myButtonHideChart">Hide Chart</button>
+<div id="iframe_div">
+  <iframe id="iframe1" hidden></iframe>
+  </div>
+  <br>
+<br>
+<button id="myButton5">Options</button>   
+<div id="optionsFrame" class="hidden_div">
+  
+ <div id='div1'></div>
+ 
+  
+   <br>
+
+  <button id="myButton4">Show/Hide Downloads</button>
+<select id="selectObjDownload" onchange="downloadObject(this.value)">
+    <option>Download JSON</option>
+	<option value=todayRate>Current Rate JSON Object</option>
+	<option value=CollectedRates>Collected Rates JSON Object</option>
+</select>
+
+<br>
+	
+
+  <br>
+
+ 
+	<input type="file" id="selectFiles" value="Import" /><br />
+	<button id="importJSONbutt">Import Currencies from JSON file</button>
+	<textarea id="resultText" hidden>
+	  
+	</textarea>
+</div>
+  <script>
+  // tell the embed parent frame the height of the content
+  if (window.parent && window.parent.parent){
+    window.parent.parent.postMessage(["resultsFrame", {
+      height: document.body.getBoundingClientRect().height,
+      slug: "None"
+    }], "*")
+  }
+</script>
+
+</body>
+
+</html>
